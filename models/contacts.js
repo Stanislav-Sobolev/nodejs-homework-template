@@ -1,29 +1,34 @@
 const fs = require("fs/promises");
 const path = require("path");
-const db = require("./contacts.json");
-const dbPath = path.join(__dirname, "contacts.json");
 const Joi = require("joi");
 
+const dbPath = path.join(__dirname, "contacts.json");
+
 const listContacts = async () => {
-  return await db;
+  const readFileContacts = await fs.readFile(dbPath, "utf-8");
+  return JSON.parse(readFileContacts);
 };
 
 const getContactById = async (contactId) => {
-  const [result] = await db.filter((el) => el.id === contactId);
-  return result;
+  const getAllContacts = await listContacts();
+  const [result] = getAllContacts.filter((el) => el.id === contactId);
+  return result || null;
 };
 
 const removeContact = async (contactId) => {
   const idStringified = contactId.toString();
+  const getAllContacts = await listContacts();
 
-  const findIndexContact = await db.findIndex((el) => el.id === idStringified);
+  const findIndexContact = getAllContacts.findIndex(
+    (el) => el.id === idStringified
+  );
 
   if (findIndexContact === -1) {
     return null;
   }
 
-  const [removedContact] = db.splice(findIndexContact, 1);
-  await fs.writeFile(dbPath, JSON.stringify(db, null, 2));
+  const [removedContact] = getAllContacts.splice(findIndexContact, 1);
+  await fs.writeFile(dbPath, JSON.stringify(getAllContacts, null, 2));
 
   return removedContact;
 };
@@ -51,14 +56,16 @@ const addContact = async (body) => {
     ...body,
   };
 
-  await db.push(newContact);
+  const getAllContacts = await listContacts();
 
-  await fs.writeFile(dbPath, JSON.stringify(db, null, 2));
+  getAllContacts.push(newContact);
+
+  await fs.writeFile(dbPath, JSON.stringify(getAllContacts, null, 2));
 
   return newContact;
 };
 
-const updateContact = async (contactId, body) => {
+const changeContact = async (contactId, body) => {
   const schema = Joi.object({
     name: Joi.string().alphanum().min(3).max(30),
     email: Joi.string().email({
@@ -76,20 +83,24 @@ const updateContact = async (contactId, body) => {
 
   const idStringifyed = contactId.toString();
 
-  const findedIndex = await db.findIndex((el) => el.id === idStringifyed);
+  const getAllContacts = await listContacts();
+
+  const findedIndex = await getAllContacts.findIndex(
+    (el) => el.id === idStringifyed
+  );
 
   if (findedIndex === -1) {
     return null;
   }
 
-  db[findedIndex] = {
+  getAllContacts[findedIndex] = {
     id: contactId,
     ...body,
   };
 
-  await fs.writeFile(dbPath, JSON.stringify(db, null, 2));
+  await fs.writeFile(dbPath, JSON.stringify(getAllContacts, null, 2));
 
-  return db[findedIndex];
+  return getAllContacts[findedIndex];
 };
 
 module.exports = {
@@ -97,5 +108,5 @@ module.exports = {
   getContactById,
   removeContact,
   addContact,
-  updateContact,
+  changeContact,
 };
