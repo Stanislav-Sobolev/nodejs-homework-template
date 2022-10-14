@@ -9,6 +9,7 @@ const schemaProduct = Joi.object({
     })
     .required(),
   phone: Joi.number().min(3).required(),
+  favorite: Joi.boolean(),
 });
 
 module.exports = schemaProduct;

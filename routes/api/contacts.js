@@ -5,6 +5,7 @@ const {
   createContact,
   deleteContact,
   updateContact,
+  updateStatusContact,
 } = require("../../controllers/controllers");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
@@ -23,5 +24,11 @@ router.post("/", validateWrapper, ctrlWrapper(createContact));
 router.delete("/:contactId", ctrlWrapper(deleteContact));
 
 router.put("/:contactId", validateWrapper, ctrlWrapper(updateContact));
+
+router.patch(
+  "/:contactId/favorite",
+  validateWrapper,
+  ctrlWrapper(updateStatusContact)
+);
 
 module.exports = router;
