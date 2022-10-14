@@ -19,12 +19,11 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.log(err.stack);
-  res.status(500).json({
+  const { message = "Server error", code = 500 } = err;
+
+  res.status(code).json({
     status: "fail",
-    code: 500,
-    message: err?.message,
-    data: "Internal Server Error",
+    message,
   });
 });
 
