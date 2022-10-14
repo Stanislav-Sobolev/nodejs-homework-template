@@ -1,6 +1,5 @@
 const fs = require("fs/promises");
 const path = require("path");
-const Joi = require("joi");
 
 const dbPath = path.join(__dirname, "contacts.json");
 
@@ -34,23 +33,6 @@ const removeContact = async (contactId) => {
 };
 
 const addContact = async (body) => {
-  const schema = Joi.object({
-    name: Joi.string().alphanum().min(3).max(30).required(),
-    email: Joi.string()
-      .email({
-        minDomainSegments: 2,
-        tlds: { allow: ["com", "net"] },
-      })
-      .required(),
-    phone: Joi.number().min(3).required(),
-  });
-
-  const validateResult = schema.validate(body);
-
-  if (validateResult.error) {
-    return { error: validateResult.error.details };
-  }
-
   const newContact = {
     id: Date.now().toString(),
     ...body,
@@ -66,21 +48,6 @@ const addContact = async (body) => {
 };
 
 const changeContact = async (contactId, body) => {
-  const schema = Joi.object({
-    name: Joi.string().alphanum().min(3).max(30),
-    email: Joi.string().email({
-      minDomainSegments: 2,
-      tlds: { allow: ["com", "net"] },
-    }),
-    phone: Joi.number().min(3),
-  });
-
-  const validateResult = schema.validate(body);
-
-  if (validateResult.error) {
-    return { error: validateResult.error.details };
-  }
-
   const idStringifyed = contactId.toString();
 
   const getAllContacts = await listContacts();
