@@ -1,17 +1,18 @@
-const Contact = require("../models/contactModel");
+const { Contact } = require("../models/contactModel");
 
 const getAllContacts = async (req, res, next) => {
   const result = await Contact.find();
-  res.status(200).json({
+
+  res.json({
     status: "success",
-    code: 201,
-    data: { result },
+    code: 200,
+    data: { contacts: result },
   });
 };
 
 const getContact = async (req, res, next) => {
   const { contactId } = req.params;
-  const result = await Contact.findOne({ _id: contactId });
+  const result = await Contact.findById(contactId);
 
   if (!result) {
     res.status(404).json({ message: "Not found" });
@@ -27,16 +28,16 @@ const getContact = async (req, res, next) => {
 const createContact = async (req, res, next) => {
   const result = await Contact.create(req.body);
 
-  res.status(201).json({
+  res.json({
     status: "success",
     code: 201,
-    data: result,
+    data: { contacts: result },
   });
 };
 
 const deleteContact = async (req, res, next) => {
   const { contactId } = req.params;
-  const result = await Contact.findOneAndRemove({ _id: contactId });
+  const result = await Contact.findByIdAndRemove(contactId);
 
   if (!result) {
     res.status(404).json({ message: "Not found" });
@@ -52,21 +53,24 @@ const deleteContact = async (req, res, next) => {
 
 const updateContact = async (req, res, next) => {
   const { contactId } = req.params;
-  const result = await Contact.findByIdAndUpdate({ _id: contactId }, req.body);
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
 
-  if (result) {
+  if (!result) {
     res.json({
-      status: "success",
-      code: 200,
-      data: { contacts: result },
+      status: "error",
+      code: 404,
+      message: `Not found task id: ${contactId}`,
+      data: "Not Found",
     });
     return;
   }
-  res.status(404).json({
-    status: "error",
-    code: 404,
-    message: `Not found task id: ${contactId}`,
-    data: "Not Found",
+
+  res.json({
+    status: "success",
+    code: 200,
+    data: { contacts: result },
   });
 };
 
@@ -78,17 +82,19 @@ const updateStatusContact = async (req, res, next) => {
     { new: true }
   );
 
-  if (result) {
+  if (!result) {
     res.json({
-      status: "success",
-      code: 200,
-      data: { contacts: result },
+      status: "error",
+      code: 404,
+      message: `Not found task id: ${contactId}`,
     });
+
     return;
   }
-  res.status(404).json({
-    status: "error",
-    message: `Not found contact id: ${contactId}`,
+  res.json({
+    status: "success",
+    code: 200,
+    data: { contacts: result },
   });
 };
 
