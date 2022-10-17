@@ -58,12 +58,11 @@ const updateContact = async (req, res, next) => {
   });
 
   if (!result) {
-    res.json({
+    res.status(404).json({
       status: "error",
-      code: 404,
-      message: `Not found task id: ${contactId}`,
-      data: "Not Found",
+      message: `Not found contact id: ${contactId}`,
     });
+
     return;
   }
 
@@ -83,10 +82,9 @@ const updateStatusContact = async (req, res, next) => {
   );
 
   if (!result) {
-    res.json({
+    res.status(404).json({
       status: "error",
-      code: 404,
-      message: `Not found task id: ${contactId}`,
+      message: `Not found contact id: ${contactId}`,
     });
 
     return;

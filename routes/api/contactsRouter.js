@@ -6,15 +6,18 @@ const {
   deleteContact,
   updateContact,
   updateStatusContact,
-} = require("../../controllers/controllers");
+} = require("../../controllers/contactCtrl");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
 const {
   schemaContact,
   schemaContactFavorite,
 } = require("../../models/contactModel");
+const authorization = require("../../middlewares/authorization");
 
 const router = express.Router();
+
+router.all("/", authorization);
 
 router.get("/", ctrlWrapper(getAllContacts));
 
