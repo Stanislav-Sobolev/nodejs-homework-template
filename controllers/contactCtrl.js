@@ -1,7 +1,11 @@
 const { Contact } = require("../models/contactModel");
 
 const getAllContacts = async (req, res, next) => {
-  const result = await Contact.find();
+  const { _id: owner } = req.user;
+  const result = await Contact.find({ owner }).populate(
+    "owner",
+    "email subscription"
+  );
 
   res.json({
     status: "success",
@@ -12,7 +16,11 @@ const getAllContacts = async (req, res, next) => {
 
 const getContact = async (req, res, next) => {
   const { contactId } = req.params;
-  const result = await Contact.findById(contactId);
+  const { _id: owner } = req.user;
+
+  const result = await Contact.findOne({ _id: contactId, owner }).select({
+    __v: 0,
+  });
 
   if (!result) {
     res.status(404).json({ message: "Not found" });
@@ -26,7 +34,8 @@ const getContact = async (req, res, next) => {
 };
 
 const createContact = async (req, res, next) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
 
   res.json({
     status: "success",

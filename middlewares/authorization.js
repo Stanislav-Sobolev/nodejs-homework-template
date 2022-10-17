@@ -6,17 +6,18 @@ const authorization = async (req, res, next) => {
     const [, tokenRequest] = req.headers.authorization.split(" ");
 
     const secret = process.env.SECRET;
-    const decoded = jwt.verify(tokenRequest, secret);
-    const user = await User.findById(decoded.id);
+    const token = jwt.verify(tokenRequest, secret);
+    const user = await User.findById(token.id);
 
-    if (user.token !== tokenRequest) {
-      res.status(401).json({ message: "Not authorized" });
-      return;
+    if (!user || user.token !== tokenRequest) {
+      throw Error("Not authorized");
     }
     req.user = user;
     next();
   } catch (error) {
-    error.status = 401;
+    if (!error.status) {
+      error.status = 401;
+    }
     next(error);
   }
 };

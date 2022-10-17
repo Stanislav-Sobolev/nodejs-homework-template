@@ -17,24 +17,29 @@ const authorization = require("../../middlewares/authorization");
 
 const router = express.Router();
 
-router.all("/", authorization);
+router.get("/", authorization, ctrlWrapper(getAllContacts));
 
-router.get("/", ctrlWrapper(getAllContacts));
+router.get("/:contactId", authorization, ctrlWrapper(getContact));
 
-router.get("/:contactId", ctrlWrapper(getContact));
+router.post(
+  "/",
+  authorization,
+  validationBody(schemaContact),
+  ctrlWrapper(createContact)
+);
 
-router.post("/", validationBody(schemaContact), ctrlWrapper(createContact));
-
-router.delete("/:contactId", ctrlWrapper(deleteContact));
+router.delete("/:contactId", authorization, ctrlWrapper(deleteContact));
 
 router.put(
   "/:contactId",
+  authorization,
   validationBody(schemaContact),
   ctrlWrapper(updateContact)
 );
 
 router.patch(
   "/:contactId/favorite",
+  authorization,
   validationBody(schemaContactFavorite),
   ctrlWrapper(updateStatusContact)
 );

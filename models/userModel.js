@@ -20,15 +20,11 @@ const userSchema = new Schema({
     type: String,
     default: null,
   },
-  owner: {
-    type: Schema.Types.ObjectId,
-    ref: "user",
-  },
 });
 
 const User = model("user", userSchema);
 
-const schemaUser = Joi.object({
+const schemaUserLogin = Joi.object({
   email: Joi.string()
     .email({
       minDomainSegments: 2,
@@ -38,4 +34,17 @@ const schemaUser = Joi.object({
   password: Joi.string().required(),
 });
 
-module.exports = { User, userSchema, schemaUser };
+const schemaUserSignup = Joi.object({
+  email: Joi.string()
+    .email({
+      minDomainSegments: 2,
+      tlds: { allow: ["com", "net"] },
+    })
+    .required(),
+  password: Joi.string().required(),
+  subscription: Joi.string()
+    .valid("starter", "pro", "business")
+    .default("starter"),
+});
+
+module.exports = { User, userSchema, schemaUserLogin, schemaUserSignup };

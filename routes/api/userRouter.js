@@ -7,21 +7,26 @@ const {
 } = require("../../controllers/userCtrl");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
+const authorization = require("../../middlewares/authorization");
 
-const { schemaUser } = require("../../models/userModel");
+const { schemaUserLogin, schemaUserSignup } = require("../../models/userModel");
 
 const userRouter = express.Router();
 
 userRouter.post(
   "/signup",
-  validationBody(schemaUser),
+  validationBody(schemaUserSignup),
   ctrlWrapper(registrationUser)
 );
 
-userRouter.post("/login", validationBody(schemaUser), ctrlWrapper(loginUser));
+userRouter.post(
+  "/login",
+  validationBody(schemaUserLogin),
+  ctrlWrapper(loginUser)
+);
 
-userRouter.post("/logout", logoutUser);
+userRouter.post("/logout", authorization, logoutUser);
 
-userRouter.post("/current", currentUser);
+userRouter.post("/current", authorization, currentUser);
 
 module.exports = userRouter;
