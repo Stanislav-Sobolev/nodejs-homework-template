@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const registrationUser = async (req, res, next) => {
-  const { email, password: pass } = req.body;
+  const { email, password: pass, subscription } = req.body;
   const userExist = await User.findOne({ email });
 
   if (userExist) {
@@ -13,7 +13,11 @@ const registrationUser = async (req, res, next) => {
     return;
   }
   const hashedPassword = await bcrypt.hash(pass, 10);
-  const result = await User.create({ email, password: hashedPassword });
+  const result = await User.create({
+    email,
+    password: hashedPassword,
+    subscription,
+  });
   const user = {
     email: result.email,
     subscription: result.subscription,
@@ -63,18 +67,7 @@ const loginUser = async (req, res, next) => {
 
 const logoutUser = async (req, res, next) => {
   try {
-    const [, tokenRequest] = req.headers.authorization.split(" ");
-
-    const secret = process.env.SECRET;
-    const decoded = jwt.verify(tokenRequest, secret);
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      res.status(401).json({
-        message: "Not authorized",
-      });
-      return;
-    }
+    const user = req.user;
 
     await User.updateOne({ _id: user._id }, { token: null });
 
@@ -83,25 +76,13 @@ const logoutUser = async (req, res, next) => {
       message: "No Content",
     });
   } catch (error) {
-    error.status = 401;
     next(error);
   }
 };
 
 const currentUser = async (req, res, next) => {
   try {
-    const [, tokenRequest] = req.headers.authorization.split(" ");
-
-    const secret = process.env.SECRET;
-    const decoded = jwt.verify(tokenRequest, secret);
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      res.status(401).json({
-        message: "Not authorized",
-      });
-      return;
-    }
+    const user = req.user;
 
     res.status(200).json({
       email: user.email,
