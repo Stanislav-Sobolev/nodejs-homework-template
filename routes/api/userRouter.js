@@ -4,10 +4,12 @@ const {
   loginUser,
   logoutUser,
   currentUser,
+  updateUserAvatar,
 } = require("../../controllers/userCtrl");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
 const authorization = require("../../middlewares/authorization");
+const { upload } = require("./avatarRouter");
 
 const { schemaUserLogin, schemaUserSignup } = require("../../models/userModel");
 
@@ -25,8 +27,15 @@ userRouter.post(
   ctrlWrapper(loginUser)
 );
 
-userRouter.post("/logout", authorization, logoutUser);
+userRouter.post("/logout", authorization, ctrlWrapper(logoutUser));
 
-userRouter.post("/current", authorization, currentUser);
+userRouter.post("/current", authorization, ctrlWrapper(currentUser));
+
+userRouter.patch(
+  "/avatars",
+  authorization,
+  upload.single("picture"),
+  updateUserAvatar
+);
 
 module.exports = userRouter;

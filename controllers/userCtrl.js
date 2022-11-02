@@ -1,6 +1,10 @@
 const { User } = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const { storeImage } = require("../routes/api/avatarRouter");
+const path = require("path");
+const Jimp = require("jimp");
 
 const registrationUser = async (req, res, next) => {
   const { email, password: pass, subscription } = req.body;
@@ -13,18 +17,22 @@ const registrationUser = async (req, res, next) => {
     return;
   }
   const hashedPassword = await bcrypt.hash(pass, 10);
+
+  const avatarURL = gravatar.url(email);
+
   const result = await User.create({
     email,
     password: hashedPassword,
     subscription,
+    avatarURL,
   });
   const user = {
     email: result.email,
     subscription: result.subscription,
   };
-  res.json({
+
+  res.status(201).json({
     status: "success",
-    code: 201,
     data: { user },
   });
 };
@@ -58,9 +66,8 @@ const loginUser = async (req, res, next) => {
 
   await User.updateOne({ _id: user._id }, { token });
 
-  res.json({
+  res.status(200).json({
     status: "success",
-    code: 200,
     data: { token, user: { email, subscription: user.subscription } },
   });
 };
@@ -94,9 +101,31 @@ const currentUser = async (req, res, next) => {
   }
 };
 
+const updateUserAvatar = async (req, res, next) => {
+  const { _id } = req.user;
+  const { path: temporaryName, originalname } = req.file;
+  const extention = originalname.split(".").pop();
+
+  const fileName = `${_id}.${extention}`;
+  const resultUpload = path.join(storeImage, fileName);
+  const avatarURL = path.join("avatars", fileName);
+
+  try {
+    Jimp.read(temporaryName, (err, image) => {
+      if (err) throw err;
+      return image.resize(250, 250).write(resultUpload);
+    });
+    await User.findByIdAndUpdate(_id, { avatarURL });
+  } catch (err) {
+    return next(err);
+  }
+  res.json({ avatarURL: avatarURL, status: 200 });
+};
+
 module.exports = {
   registrationUser,
   loginUser,
   logoutUser,
   currentUser,
+  updateUserAvatar,
 };

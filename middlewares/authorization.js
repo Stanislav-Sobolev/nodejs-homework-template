@@ -3,6 +3,9 @@ const { User } = require("../models/userModel");
 
 const authorization = async (req, res, next) => {
   try {
+    if (!req.headers.authorization) {
+      throw Error("Not authorized");
+    }
     const [, tokenRequest] = req.headers.authorization.split(" ");
 
     const secret = process.env.SECRET;
