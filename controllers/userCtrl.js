@@ -2,9 +2,28 @@ const { User } = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
-const { storeImage } = require("../routes/api/avatarRouter");
 const path = require("path");
 const Jimp = require("jimp");
+const fs = require("fs").promises;
+const multer = require("multer");
+
+const storeImage = path.join(process.cwd(), "public", "avatars");
+
+const tempDir = path.join(__dirname, "/../../temp");
+
+const storage = multer.diskStorage({
+  destination: tempDir,
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+  limits: {
+    fileSize: 1048576,
+  },
+});
+
+const upload = multer({
+  storage: storage,
+});
 
 const registrationUser = async (req, res, next) => {
   const { email, password: pass, subscription } = req.body;
@@ -122,10 +141,25 @@ const updateUserAvatar = async (req, res, next) => {
   res.json({ avatarURL: avatarURL, status: 200 });
 };
 
+const uploadUserAvatar = async (req, res, next) => {
+  const { description } = req.body;
+  const { path: temporaryName, originalname } = req.file;
+  const fileName = path.join(storeImage, originalname);
+  try {
+    await fs.rename(temporaryName, fileName);
+  } catch (err) {
+    await fs.unlink(temporaryName);
+    return next(err);
+  }
+  res.json({ description, message: "Файл успешно загружен", status: 200 });
+};
+
 module.exports = {
   registrationUser,
   loginUser,
   logoutUser,
   currentUser,
   updateUserAvatar,
+  uploadUserAvatar,
+  upload,
 };

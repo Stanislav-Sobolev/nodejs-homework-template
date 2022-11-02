@@ -5,11 +5,12 @@ const {
   logoutUser,
   currentUser,
   updateUserAvatar,
+  uploadUserAvatar,
 } = require("../../controllers/userCtrl");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
 const authorization = require("../../middlewares/authorization");
-const { upload } = require("./avatarRouter");
+const { upload } = require("../../controllers/userCtrl");
 
 const { schemaUserLogin, schemaUserSignup } = require("../../models/userModel");
 
@@ -37,5 +38,7 @@ userRouter.patch(
   upload.single("picture"),
   updateUserAvatar
 );
+
+userRouter.post("/upload", upload.single("picture"), uploadUserAvatar);
 
 module.exports = userRouter;
