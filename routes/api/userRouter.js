@@ -10,7 +10,7 @@ const {
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
 const authorization = require("../../middlewares/authorization");
-const { upload } = require("../../controllers/userCtrl");
+const upload = require("../../middlewares/upload");
 
 const { schemaUserLogin, schemaUserSignup } = require("../../models/userModel");
 
