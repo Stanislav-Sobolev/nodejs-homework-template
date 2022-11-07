@@ -5,6 +5,12 @@ const gravatar = require("gravatar");
 const path = require("path");
 const Jimp = require("jimp");
 const fs = require("fs").promises;
+const { v4: uuidv4 } = require("uuid");
+const sgMail = require("@sendgrid/mail");
+require("dotenv").config();
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const emailSgFrom = process.env.SENDGRID_API_EMAIL_FROM;
 
 const storeImage = path.join(process.cwd(), "public", "avatars");
 
@@ -20,6 +26,8 @@ const registrationUser = async (req, res, next) => {
   }
   const hashedPassword = await bcrypt.hash(pass, 10);
 
+  const verificationToken = uuidv4();
+
   const avatarURL = gravatar.url(email);
 
   const result = await User.create({
@@ -27,7 +35,24 @@ const registrationUser = async (req, res, next) => {
     password: hashedPassword,
     subscription,
     avatarURL,
+    verificationToken,
   });
+
+  const msg = {
+    to: email,
+    from: emailSgFrom,
+    subject: "Verify your email",
+    text: `Click this link http://localhost:3000/api/users/verify/${verificationToken} for verification email`,
+    html: `<p>Click this <strong><a href="http://localhost:3000/api/users/verify/${verificationToken}">link</a></strong> for verification email</p>`,
+  };
+
+  sgMail.send(msg).then(
+    () => {},
+    (error) => {
+      console.error(error?.response?.body);
+    }
+  );
+
   const user = {
     email: result.email,
     subscription: result.subscription,
@@ -46,6 +71,13 @@ const loginUser = async (req, res, next) => {
   if (!user) {
     res.status(401).json({
       message: "Email or password is wrong",
+    });
+    return;
+  }
+
+  if (!user.verify) {
+    res.status(401).json({
+      message: "Verify your email",
     });
     return;
   }
@@ -137,6 +169,71 @@ const uploadUserAvatar = async (req, res, next) => {
   res.json({ description, message: "Файл успешно загружен", status: 200 });
 };
 
+const verifyUser = async (req, res, next) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOneAndUpdate(
+    { verificationToken },
+    { verify: true, verificationToken: null }
+  );
+
+  if (!user) {
+    res.status(404).json({
+      message: "User not found'",
+    });
+    return;
+  }
+
+  res.status(200).json({
+    message: "Verification successful",
+  });
+};
+
+const resendVerifyUser = async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({
+      message: "missing required field email",
+    });
+    return;
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404).json({
+      message: "User not found'",
+    });
+    return;
+  }
+
+  if (user.verify) {
+    res.status(400).json({
+      message: "Verification has already been passed",
+    });
+    return;
+  }
+
+  const msg = {
+    to: email,
+    from: emailSgFrom,
+    subject: "Verify your email",
+    text: `Click this link http://localhost:3000/api/users/verify/${user.verificationToken} for verification email`,
+    html: `<p>Click this <strong><a href="http://localhost:3000/api/users/verify/${user.verificationToken}">link</a></strong> for verification email</p>`,
+  };
+
+  sgMail.send(msg).then(
+    () => {},
+    (error) => {
+      console.error(error?.response?.body);
+    }
+  );
+
+  res.status(200).json({
+    message: "Verification email sent",
+  });
+};
+
 module.exports = {
   registrationUser,
   loginUser,
@@ -144,4 +241,6 @@ module.exports = {
   currentUser,
   updateUserAvatar,
   uploadUserAvatar,
+  verifyUser,
+  resendVerifyUser,
 };

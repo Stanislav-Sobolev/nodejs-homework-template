@@ -6,6 +6,8 @@ const {
   currentUser,
   updateUserAvatar,
   uploadUserAvatar,
+  verifyUser,
+  resendVerifyUser,
 } = require("../../controllers/userCtrl");
 const validationBody = require("../../middlewares/validationBody");
 const ctrlWrapper = require("../../middlewares/ctrlWrapper");
@@ -40,5 +42,9 @@ userRouter.patch(
 );
 
 userRouter.post("/upload", upload.single("picture"), uploadUserAvatar);
+
+userRouter.get("/verify/:verificationToken", ctrlWrapper(verifyUser));
+
+userRouter.post("/verify", ctrlWrapper(resendVerifyUser));
 
 module.exports = userRouter;
