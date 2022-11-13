@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const gravatar = require("gravatar");
 const path = require("path");
 const Jimp = require("jimp");
-const fs = require("fs").promises;
 const { v4: uuidv4 } = require("uuid");
 const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
@@ -46,22 +45,22 @@ const registrationUser = async (req, res, next) => {
     html: `<p>Click this <strong><a href="http://localhost:3000/api/users/verify/${verificationToken}">link</a></strong> for verification email</p>`,
   };
 
-  sgMail.send(msg).then(
-    () => {},
-    (error) => {
+  sgMail
+    .send(msg)
+    .then(() => {
+      const user = {
+        email: result.email,
+        subscription: result.subscription,
+      };
+
+      res.status(201).json({
+        status: "success",
+        data: { user },
+      });
+    })
+    .catch((error) => {
       console.error(error?.response?.body);
-    }
-  );
-
-  const user = {
-    email: result.email,
-    subscription: result.subscription,
-  };
-
-  res.status(201).json({
-    status: "success",
-    data: { user },
-  });
+    });
 };
 
 const loginUser = async (req, res, next) => {
@@ -156,19 +155,6 @@ const updateUserAvatar = async (req, res, next) => {
   res.json({ avatarURL: avatarURL, status: 200 });
 };
 
-const uploadUserAvatar = async (req, res, next) => {
-  const { description } = req.body;
-  const { path: temporaryName, originalname } = req.file;
-  const fileName = path.join(storeImage, originalname);
-  try {
-    await fs.rename(temporaryName, fileName);
-  } catch (err) {
-    await fs.unlink(temporaryName);
-    return next(err);
-  }
-  res.json({ description, message: "Файл успешно загружен", status: 200 });
-};
-
 const verifyUser = async (req, res, next) => {
   const { verificationToken } = req.params;
   const user = await User.findOneAndUpdate(
@@ -222,16 +208,16 @@ const resendVerifyUser = async (req, res, next) => {
     html: `<p>Click this <strong><a href="http://localhost:3000/api/users/verify/${user.verificationToken}">link</a></strong> for verification email</p>`,
   };
 
-  sgMail.send(msg).then(
-    () => {},
-    (error) => {
+  sgMail
+    .send(msg)
+    .then(() => {
+      res.status(200).json({
+        message: "Verification email sent",
+      });
+    })
+    .catch((error) => {
       console.error(error?.response?.body);
-    }
-  );
-
-  res.status(200).json({
-    message: "Verification email sent",
-  });
+    });
 };
 
 module.exports = {
@@ -240,7 +226,6 @@ module.exports = {
   logoutUser,
   currentUser,
   updateUserAvatar,
-  uploadUserAvatar,
   verifyUser,
   resendVerifyUser,
 };

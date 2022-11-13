@@ -5,7 +5,6 @@ const {
   logoutUser,
   currentUser,
   updateUserAvatar,
-  uploadUserAvatar,
   verifyUser,
   resendVerifyUser,
 } = require("../../controllers/userCtrl");
@@ -40,8 +39,6 @@ userRouter.patch(
   upload.single("picture"),
   updateUserAvatar
 );
-
-userRouter.post("/upload", upload.single("picture"), uploadUserAvatar);
 
 userRouter.get("/verify/:verificationToken", ctrlWrapper(verifyUser));
 

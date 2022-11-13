@@ -22,7 +22,7 @@ const contactSchema = new Schema({
   },
 });
 
-const Contact = model("contacts", contactSchema);
+const Contact = model("contact", contactSchema);
 
 const schemaContact = Joi.object({
   name: Joi.string().alphanum().min(3).max(30).required(),
